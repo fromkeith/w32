@@ -43,6 +43,7 @@ var (
 	procGetProcessTimes            = modkernel32.NewProc("GetProcessTimes")
 	procSetSystemTime              = modkernel32.NewProc("SetSystemTime")
 	procGetSystemTime              = modkernel32.NewProc("GetSystemTime")
+	procGetVolumeInformation       = modkernel32.NewProc("GetVolumeInformationW")
 )
 
 func GetModuleHandle(modulename string) HINSTANCE {
@@ -310,4 +311,35 @@ func SetSystemTime(time *SYSTEMTIME) bool {
 	ret, _, _ := procSetSystemTime.Call(
 		uintptr(unsafe.Pointer(time)))
 	return ret != 0
+}
+
+//http://msdn.microsoft.com/en-us/library/windows/desktop/aa364993%28v=vs.85%29.aspx
+// @return success, VolumeName, VolumeSerialNumber, MaximumComponentLength, FileSystemFlags, FileSystemNameBuffer
+func GetVolumeInformation(rootPath string, nVolumeNameSize, nFileSystemNameSize int) (bool, string, uint32, uint32, uint32, string) {
+	volumeNameBuffer := make([]uint16, nVolumeNameSize)
+	fileSystemName := make([]uint16, nFileSystemNameSize)
+	for i := range volumeNameBuffer {
+		volumeNameBuffer[i] = ' '
+	}
+	for i := range fileSystemName {
+		fileSystemName[i] = ' '
+	}
+	var lpVolumeSerialNumber, lpMaximumComponentLength, lpFileSystemFlags uint32
+
+	ret, _, _ := procGetVolumeInformation.Call(
+		uintptr(unsafe.Pointer(syscall.StringToUTF16Ptr(rootPath))),
+		uintptr(unsafe.Pointer(&volumeNameBuffer[0])),
+		uintptr(nVolumeNameSize),
+		uintptr(unsafe.Pointer(&lpVolumeSerialNumber)),
+		uintptr(unsafe.Pointer(&lpMaximumComponentLength)),
+		uintptr(unsafe.Pointer(&lpFileSystemFlags)),
+		uintptr(unsafe.Pointer(&fileSystemName[0])),
+		uintptr(nFileSystemNameSize),
+	)
+	return ret != 0,
+		syscall.UTF16ToString(volumeNameBuffer),
+		lpVolumeSerialNumber,
+		lpMaximumComponentLength,
+		lpFileSystemFlags,
+		syscall.UTF16ToString(fileSystemName)
 }
