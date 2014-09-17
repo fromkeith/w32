@@ -60,6 +60,8 @@ var (
 	procSetPixelFormat            = modgdi32.NewProc("SetPixelFormat")
 	procSwapBuffers               = modgdi32.NewProc("SwapBuffers")
 	procCreateSolidBrush          = modgdi32.NewProc("CreateSolidBrush")
+	procCreateFont                = modgdi32.NewProc("CreateFontW")
+	procTextOut                   = modgdi32.NewProc("TextOutW")
 )
 
 func GetDeviceCaps(hdc HDC, index int) int {
@@ -514,3 +516,57 @@ func CreateSolidBrush(colorRef COLORREF) HBRUSH {
 	return HBRUSH(res)
 }
 
+func CreateFont(
+	nHeight int,
+  	nWidth int,
+  	nEscapement int,
+  	nOrientation int,
+  	fnWeight int,
+  	fdwItalic uint32,
+  	fdwUnderline uint32,
+  	fdwStrikeOut uint32,
+  	fdwCharSet uint32,
+  	fdwOutputPrecision uint32,
+  	fdwClipPrecision uint32,
+  	fdwQuality uint32,
+  	fdwPitchAndFamily uint32,
+  	lpszFace string) HFONT {
+
+	res, _, _ := procCreateFont.Call(
+		uintptr(nHeight),
+		uintptr(nWidth),
+		uintptr(nEscapement),
+		uintptr(nOrientation),
+		uintptr(fnWeight),
+		uintptr(fdwItalic),
+		uintptr(fdwUnderline),
+		uintptr(fdwStrikeOut),
+		uintptr(fdwCharSet),
+		uintptr(fdwOutputPrecision),
+		uintptr(fdwClipPrecision),
+		uintptr(fdwQuality),
+		uintptr(fdwPitchAndFamily),
+		uintptr(unsafe.Pointer(syscall.StringToUTF16Ptr(lpszFace))),
+	)
+	return HFONT(res)
+}
+
+func TextOut(
+	hdc HDC,
+  	nXStart int,
+  	nYStart int,
+  	lpString string,
+  	cchString int) bool {
+
+	res, _, _ := procTextOut.Call(
+		uintptr(hdc),
+		uintptr(nXStart),
+		uintptr(nYStart),
+		uintptr(unsafe.Pointer(syscall.StringToUTF16Ptr(lpString))),
+		uintptr(cchString),
+	)
+	if res == 0 {
+		return false
+	}
+	return true
+}

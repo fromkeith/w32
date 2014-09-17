@@ -21,6 +21,7 @@ var (
 	procImageList_ReplaceIcon   = modcomctl32.NewProc("ImageList_ReplaceIcon")
 	procImageList_Remove        = modcomctl32.NewProc("ImageList_Remove")
 	procTrackMouseEvent         = modcomctl32.NewProc("_TrackMouseEvent")
+	procCreateStatusWindow      = modcomctl32.NewProc("CreateStatusWindowW")
 )
 
 func InitCommonControlsEx(lpInitCtrls *INITCOMMONCONTROLSEX) bool {
@@ -106,4 +107,14 @@ func TrackMouseEvent(tme *TRACKMOUSEEVENT) bool {
 		uintptr(unsafe.Pointer(tme)))
 
 	return ret != 0
+}
+
+func CreateStatusWindow(style uint64, status string, parent HWND, id uint) HWND {
+	ret, _, _ := procCreateStatusWindow.Call(
+		uintptr(style),
+		uintptr(unsafe.Pointer(syscall.StringToUTF16Ptr(status))),
+		uintptr(parent),
+		uintptr(id),
+	)
+	return HWND(ret)
 }

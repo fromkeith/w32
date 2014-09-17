@@ -119,6 +119,7 @@ var (
 	procTrackPopupMenu                = moduser32.NewProc("TrackPopupMenu")
 	procSetForegroundWindow           = moduser32.NewProc("SetForegroundWindow")
 	procSetTimer                      = moduser32.NewProc("SetTimer")
+	procRedrawWindow                  = moduser32.NewProc("RedrawWindow")
 )
 
 func RegisterClassEx(wndClassEx *WNDCLASSEX) ATOM {
@@ -1014,4 +1015,14 @@ func SetTimer(wnd HWND, nIDEvent uintptr, uElapse uint) uintptr {
 		0,
 	)
 	return ret
+}
+
+func RedrawWindow(wnd HWND, updateRec *RECT, updateRegion HRGN, flags uint) bool {
+	ret, _, _ := procRedrawWindow.Call(
+		uintptr(wnd),
+		uintptr(unsafe.Pointer(updateRec)),
+		uintptr(updateRegion),
+		uintptr(flags),
+	)
+	return ret != 0
 }
