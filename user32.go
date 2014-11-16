@@ -120,6 +120,7 @@ var (
 	procSetForegroundWindow           = moduser32.NewProc("SetForegroundWindow")
 	procSetTimer                      = moduser32.NewProc("SetTimer")
 	procRedrawWindow                  = moduser32.NewProc("RedrawWindow")
+	procGetParent                     = moduser32.NewProc("GetParent")
 )
 
 func RegisterClassEx(wndClassEx *WNDCLASSEX) ATOM {
@@ -1025,4 +1026,11 @@ func RedrawWindow(wnd HWND, updateRec *RECT, updateRegion HRGN, flags uint) bool
 		uintptr(flags),
 	)
 	return ret != 0
+}
+
+func GetParent(wnd HWND) HWND {
+	ret, _, _ := procGetParent.Call(
+		uintptr(wnd),
+	)
+	return HWND(ret)
 }
